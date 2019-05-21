@@ -21,12 +21,21 @@ func New(executor func(ctx context.Context, resolve ResolveFunc, reject RejectFu
 		state: StatePending,
 		lock:  &sync.Mutex{},
 	}
-	go promise.run(executor)
+	go promise.run(context.TODO(), executor)
 	return promise
 }
 
-func (p *Promise) run(executor func(ctx context.Context, resolve ResolveFunc, reject RejectFunc)) {
-	ctx, cancel := context.WithCancel(context.TODO())
+func NewWithContext(ctx context.Context, executor func(ctx context.Context, resolve ResolveFunc, reject RejectFunc)) Interface {
+	promise := &Promise{
+		state: StatePending,
+		lock:  &sync.Mutex{},
+	}
+	go promise.run(ctx, executor)
+	return promise
+}
+
+func (p *Promise) run(ctx context.Context, executor func(ctx context.Context, resolve ResolveFunc, reject RejectFunc)) {
+	ctx, cancel := context.WithCancel(ctx)
 	p.cancelFunc = cancel
 	finally := func() {
 		p.lock.Lock()

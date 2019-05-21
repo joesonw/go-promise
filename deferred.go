@@ -12,9 +12,13 @@ type Deferred struct {
 }
 
 func NewDeferred() *Deferred {
+	return NewDeferredWithContext(context.TODO())
+}
+
+func NewDeferredWithContext(ctx context.Context) *Deferred {
 	deferred := &Deferred{}
 	wait := make(chan struct{}, 1)
-	promise := New(func(ctx context.Context, resolve ResolveFunc, reject RejectFunc) {
+	promise := NewWithContext(ctx, func(ctx context.Context, resolve ResolveFunc, reject RejectFunc) {
 		wait <- struct{}{}
 		deferred.context = ctx
 		deferred.resolve = resolve
