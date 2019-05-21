@@ -134,7 +134,10 @@ func (p *Promise) Catch(onRejected CatchFunc) Interface {
 }
 
 func (p *Promise) Finally(finallyFunc FinallyFunc) {
-	p.Await()
+	_, err := p.Await()
+	if err != nil {
+		return
+	}
 	finallyFunc()
 }
 
@@ -153,10 +156,20 @@ func (p Promise) State() State {
 	return p.state
 }
 
-func (p Promise) Await() {
+func (p Promise) Await() (interface{}, error) {
 	ch := make(chan struct{}, 1)
 	p.lock.Lock()
 	p.waitChannels = append(p.waitChannels, ch)
 	p.lock.Unlock()
 	<-ch
+	if p.state == StateResolved {
+		return p.value, nil
+	}
+	if p.state == StateRejected {
+		return nil, p.error
+	}
+	if p.state == StateAborted {
+		return nil, ErrAborted
+	}
+	panic("undefined state: " + p.state.String())
 }

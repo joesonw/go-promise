@@ -1,5 +1,7 @@
 package promise
 
+import "errors"
+
 type State int
 
 const (
@@ -22,6 +24,10 @@ func (s State) String() string {
 	}
 	return ""
 }
+
+var (
+	ErrAborted = errors.New("aborted")
+)
 
 type RejectFunc func(error)
 type ResolveFunc func(interface{})
@@ -58,5 +64,5 @@ type Interface interface {
 	Finally(FinallyFunc)
 	State() State
 	Abort()
-	Await()
+	Await() (interface{}, error)
 }
